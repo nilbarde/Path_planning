@@ -9,7 +9,7 @@ using namespace std;
 int N=1000;
 pcl::PointCloud<pcl::PointXYZ>::Ptr obst_cloud (new pcl::PointCloud<pcl::PointXYZ>);
 pcl::PointCloud<pcl::PointXYZ>::Ptr rrg_cloud (new pcl::PointCloud<pcl::PointXYZ>);
-std::vector<double> rrg_bubble;
+std::vector<double> rrg_bubble(1000);
 pcl::KdTreeFLANN<pcl::PointXYZ> obst_kdtree;
 pcl::KdTreeFLANN<pcl::PointXYZ> rrg_kdtree;
 pcl::PointXYZ start, infi;
@@ -55,7 +55,8 @@ double bubble_radius(pcl::PointXYZ p1)
 }
 bool CONNECT(int index)
 {
-  rrg_bubble[index]=bubble_radius(rrg_cloud->points[index]);/*
+  rrg_bubble[index]=bubble_radius(rrg_cloud->points[index]);
+  cout<<"bubble radius completed successfully"<<endl;/*
   for(int i=0;i<index;i++)
     if(dist(rrg_cloud->points[index],rrg_cloud->points[i])<rrg_bubble[i])
     {
@@ -84,7 +85,7 @@ void init_rrg()
 {
   rrg_cloud->width = N;
   rrg_cloud->height = 1;
-  rrg_cloud->points.resize (rrg_cloud->width * rrg_cloud->height);
+
   rrg_cloud->points.resize (rrg_cloud->width * rrg_cloud->height);
   rrg_cloud->points[0].x=0;
   rrg_cloud->points[0].y=0;
@@ -94,9 +95,11 @@ void init_rrg()
   infi.z=std::numeric_limits<float>::infinity();
   for(int i=1;i<N;i++)
   {
-    rrg_cloud->points[i]=infi;
+  	rrg_cloud->points[i].x=std::numeric_limits<float>::infinity();
+  	rrg_cloud->points[i].y=std::numeric_limits<float>::infinity();
+  	rrg_cloud->points[i].z=std::numeric_limits<float>::infinity();
   }
-  cout<<dist(rrg_cloud->points[0],rrg_cloud->points[1]);
+  cout<<dist(rrg_cloud->points[0],rrg_cloud->points[999]);
   cout<<"rrg initialized"<<endl;
 }
 int main (int argc, char** argv)
@@ -113,9 +116,7 @@ int main (int argc, char** argv)
   rrg_bubble.push_back(bubble_radius(rrg_cloud->points[0]));
   cout<<"start point set"<<endl;
   for(int i=1;i<N;i++)
-  {
-    pointIdxNKNSearch.clear();
-    pointNKNSquaredDistance.clear();    
+  {  
     rrg_kdtree.setInputCloud (rrg_cloud);
     pcl::PointXYZ searchPoint;
     searchPoint.x= 1024.0f * rand () / (RAND_MAX + 1.0f);
@@ -138,6 +139,7 @@ int main (int argc, char** argv)
         if(!CONNECT(i)){
           i--;
           rrg_cloud->points[i]=infi;
+          cout<<"sorted error in CONNECT"<<endl;
         }
       }
       else
@@ -156,6 +158,7 @@ int main (int argc, char** argv)
         if(!CONNECT(i)){
           i--;
           rrg_cloud->points[i]=infi;
+          cout<<"sorted error in CONNECT (2)"<<endl;
         }
       }
     }
